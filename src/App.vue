@@ -2,7 +2,9 @@
     <div class="entirePage">
         <nav-bar></nav-bar>
         <div class="container bodyContent">
-            <router-view></router-view>
+            <transition name="fade" mode="out-in">
+                <router-view></router-view>
+            </transition>
         </div>
     </div>
 </template>
@@ -23,5 +25,12 @@
     }
     .bodyContent {
         margin-top: 10rem;
+    }
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity 0.5s;
+    }
+
+    .fade-enter, .fade-leave-to {
+        opacity: 0;
     }
 </style>

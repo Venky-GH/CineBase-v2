@@ -1,22 +1,28 @@
 <template>
-    <div :id="id" class="modal fade" role="dialog">
+    <div :id="modalID" class="modal fade" role="dialog">
         <div class="modal-dialog">
 
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Add Details</h4>
+                    <h4 class="modal-title">Add {{ type === 1 ? "Actor" : "Producer" }} Details</h4>
                 </div>
                 <div class="modal-body">
                     <form id="detailsForm">
                         <div class="form-group">
-                            <label for="name">Name*</label>
+                            <label for="name">
+                                Name
+                                <span class="requiredField">*</span>
+                            </label>
                             <input type="text" placeholder="Eg: Venkatesh Naidu" id="name" name="name"
                                    v-model="details.name" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label>Sex*</label>
+                            <label>
+                                Sex
+                                <span class="requiredField">*</span>
+                            </label>
                             <br>
                             <label class="radio-label">
                                 <input type="radio" name="sex" value="Male" v-model="details.sex" required>
@@ -28,18 +34,26 @@
                             </label>
                         </div>
                         <div class="form-group">
-                            <label for="dob">Date of Birth*</label>
-                            <input type="date" id="dob" name="dob" v-model="details.dob" placeholder="Eg: " class="form-control" required>
+                            <label for="dateOfBirth">
+                                Date of Birth
+                                <span class="requiredField">*</span>
+                            </label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth" v-model="details.dateOfBirth"
+                                   placeholder="Eg: " class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label for="bio">Biography*</label>
-                            <textarea name="bio" id="bio" cols="30" v-model="details.bio" class="form-control" rows="10"
+                            <label for="biography">
+                                Biography
+                                <span class="requiredField">*</span>
+                            </label>
+                            <textarea name="bio" id="bio" cols="30" v-model="details.biography" class="form-control"
+                                      rows="10"
                                       placeholder="Enter biography....." required></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" @click.prevent="formSubmit" class="btn btn-success">SUBMIT</button>
+                    <button type="button" @click.prevent="FormSubmit" class="btn btn-success">SUBMIT</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">CLOSE</button>
                 </div>
             </div>
@@ -49,40 +63,49 @@
 </template>
 
 <script>
-    import {myApiService} from "../../api";
+    import {MyApiService} from "../../api";
     import {$, eventBus} from '../../main';
+    import {ShowToast} from "../../main";
 
     export default {
-        props: ['id'],
+        props: ['modalID'],
         data() {
             return {
                 details: {
                     name: '',
                     sex: 'Male',
-                    dob: '',
-                    bio: '',
-                    type: ''
-                }
+                    dateOfBirth: '',
+                    biography: ''
+                },
+                type: 0
             }
         },
         methods: {
-            formSubmit() {
-                myApiService.addItem(this.details).then(res => {
-                    if (res.data.status === 1) {
-                        let details = {
-                            id: res.data.id,
-                            name: res.data.name
-                        };
-                        eventBus.$emit('newAddition', details, this.details.type);
-                        $('#detailsForm')[0].reset();
-                        alert('Added Successfully!');
-                    }
-                })
+            async FormSubmit() {
+                try {
+                    let response = await MyApiService.AddItem(this.details, this.type);
+                    let insertedItem = {
+                        id: response.data.id,
+                        name: this.details.name
+                    };
+                    eventBus.$emit('newAddition', insertedItem, this.type);
+                    this.ResetForm();
+                    ShowToast(1, (this.type === 1) ? "Actor" : "Producer" + " added successfully");
+                } catch (e) {
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
+                }
+            },
+            ResetForm() {
+                this.details.name = '';
+                this.details.sex = 'Male';
+                this.details.dateOfBirth = '';
+                this.details.biography = '';
             }
         },
         created() {
             eventBus.$on('typeCasted', (value) => {
-                this.details.type = value;
+                this.type = value;
             });
         }
     }
@@ -110,5 +133,9 @@
 
     .modal-header {
         border-top: 2px solid #eee;
+    }
+
+    .requiredField {
+        color: rgba(255, 38, 0, 0.78);
     }
 </style>

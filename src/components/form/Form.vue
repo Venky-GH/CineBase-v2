@@ -4,66 +4,87 @@
             Movie Details
         </div>
         <form id="myForm">
-            <div class="form-group" :class="{'invalid': $v.modified_details.name.$error}">
-                <label for="movie_name">Name*</label>
-                <input type="text" v-model.trim="modified_details.name" class="form-control" name="movie_name"
+            <div class="form-group">
+                <label for="movie_name">
+                    Name
+                    <span class="requiredField">*</span>
+                </label>
+                <input type="text" v-model.trim="movieDetails.name" class="form-control" name="movie_name"
                        placeholder="Eg: The Expendables" id="movie_name" required>
             </div>
+            <label for="image_file" class="imageLabel">
+                Image
+                <span class="requiredField">*</span>
+            </label>
             <div v-if="showPreview" class="preview">
-                <img :src="baseImageURL + modified_details.image" alt="" id="image_preview">
+                <img :src="baseImageURL + movieDetails.image" alt="" id="image_preview">
             </div>
             <div class="form-group">
-                <label for="image_file">Image</label>
-                <input type="file" class="form-control file_type" @change="imageEventListener" id="image_file"
+                <input type="file" class="form-control file_type hidden" @change="ImageEventListener" id="image_file"
                        name="file">
+                <button class="add_button btn btn-success" @click.prevent="TriggerUploadButton">
+                    <span v-if="showPreview">Change Image</span>
+                    <span v-else>Upload Image</span>
+                </button>
             </div>
             <div class="form-group">
-                <label>Actors</label>
-                <multiselect id="ac" v-model="selected_actors" :options="actor_options" :multiple="true"
+                <label>
+                    Actors
+                    <span class="requiredField">*</span>
+                </label>
+                <multiselect id="ac" v-model="selectedActors" :options="actorOptions" :multiple="true"
                              :close-on-select="false" :clear-on-select="false" :preserve-search="true"
                              placeholder="Select one or more" label="name" track-by="id" :preselect-first="true">
                     <template slot="selection" slot-scope="{ values, search, isOpen }">
                         <span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">{{ values.length }} options selected</span>
                     </template>
                 </multiselect>
-                <button :data-target="'#' + modalID" data-toggle="modal" @click.prevent="sendType(1)"
+                <button :data-target="'#' + modalID" data-toggle="modal" @click.prevent="SendType(1)"
                         class="add_button btn btn-success">Add Actor
                 </button>
             </div>
             <div class="form-group">
-                <label>Producer</label>
-                <multiselect id="pd" v-model="selected_producer" :options="producer_options"
+                <label>
+                    Producer
+                    <span class="requiredField">*</span>
+                </label>
+                <multiselect id="pd" v-model="selectedProducer" :options="producerOptions"
                              placeholder="Select a producer" label="name" track-by="id"
                              :preselect-first="true">
                 </multiselect>
-                <button :data-target="'#' + modalID" data-toggle="modal" @click.prevent="sendType(2)"
+                <button :data-target="'#' + modalID" data-toggle="modal" @click.prevent="SendType(2)"
                         class="add_button btn btn-success">Add Producer
                 </button>
             </div>
-            <div class="form-group" :class="{'invalid': $v.modified_details.yor.$error}">
-                <label for="movie_yor">Year of Release*</label>
-                <input type="number" v-model="modified_details.yor" class="form-control" id="movie_yor" name="yor"
+            <div class="form-group">
+                <label for="movie_yearOfRelease">
+                    Year of Release
+                    <span class="requiredField">*</span>
+                </label>
+                <input type="number" v-model="movieDetails.yearOfRelease" class="form-control" id="movie_yearOfRelease"
+                       name="yearOfRelease"
                        placeholder="Eg: 2001" required>
-                <p v-if="!$v.modified_details.yor.between">Please enter a valid year</p>
             </div>
-            <div class="form-group" :class="{'invalid': $v.modified_details.plot.$error}">
-                <label for="movie_plot">Plot*</label>
-                <textarea v-model="modified_details.plot" placeholder="Plot of the Movie...." id="movie_plot"
+            <div class="form-group">
+                <label for="movie_plot">
+                    Plot
+                    <span class="requiredField">*</span>
+                </label>
+                <textarea v-model="movieDetails.plot" placeholder="Plot of the Movie...." id="movie_plot"
                           name="plot" class="form-control" rows="10" required></textarea>
-                <p v-if="!$v.modified_details.plot.minLength">Plot must be at least 100 characters long</p>
             </div>
-            <div class="submit_button"><!-- , {'disabled' : $v.modified_details.$error}-->
-                <button @click.prevent="submitForm" :class="['btn btn-info']">SUBMIT</button>
+            <div class="submit_button">
+                <button @click.prevent="SubmitForm" class="btn btn-info">SUBMIT</button>
                 <router-link :to="{name: 'movies'}" tag="button" class="btn btn-danger">Cancel</router-link>
             </div>
         </form>
-        <my-modal :id="modalID"></my-modal>
+        <my-modal :modalID="modalID"></my-modal>
     </div>
 </template>
 
 <script>
-    import {myApiService} from '../../api';
-    import {$, baseImageURL, eventBus} from '../../main';
+    import {MyApiService} from '../../api';
+    import {baseImageURL, eventBus, ShowToast} from '../../main';
     import Multiselect from 'vue-multiselect';
     import myModal from './modal.vue';
     import {required, minLength, numeric, minValue, between} from 'vuelidate/lib/validators'
@@ -71,39 +92,22 @@
     export default {
         data() {
             return {
-                modified_details: {
+                movieDetails: {
                     id: -1,
                     name: '',
                     image: '',
                     plot: '',
-                    yor: ''
+                    yearOfRelease: ''
                 },
-                actor_options: [],
-                producer_options: [],
-                selected_actors: [],
-                selected_actors_form: [],
-                selected_producer_form: '',
-                selected_producer: null,
-                file_status: 0,
+                actorOptions: [],
+                producerOptions: [],
+                selectedActors: [],
+                selectedActorIds: [],
+                selectedProducerId: '',
+                selectedProducer: null,
                 baseImageURL: baseImageURL,
                 modalID: 'addOnPopUp',
                 showPreview: false
-            }
-        },
-        validations: {
-            modified_details: {
-                name: {
-                    required
-                },
-                plot: {
-                    required,
-                    minLength: minLength(100)
-                },
-                yor: {
-                    required,
-                    numeric,
-                    between: between(1800, 2019)
-                }
             }
         },
         components: {
@@ -111,172 +115,153 @@
             myModal
         },
         methods: {
-            async populateActors() {
+            TriggerUploadButton() {
+                document.getElementById('image_file').click();
+            },
+            async PopulateActors() {
                 try {
-                    let actor_details = await myApiService.listItems(2);
-                    this.actor_options = [];
-                    $.each(actor_details.data.list, (key, value) => {
-                        this.actor_options.push({
+                    let actorDetails = await MyApiService.FetchAllActors();
+                    this.actorOptions = [];
+                    $.each(actorDetails.data.result, (key, value) => {
+                        this.actorOptions.push({
                             name: value.name,
-                            id: parseInt(value.actor_id)
+                            id: value.id
                         });
                     });
                 } catch (e) {
-                    console.log(e);
-                    alert('Something went wrong!');
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
                 }
             },
-            async populateProducer() {
+            async PopulateProducer() {
                 try {
-                    let producer_details = await myApiService.listItems(3);
-                    this.producer_options = [];
-                    $.each(producer_details.data.list, (key, value) => {
-                        this.producer_options.push({
+                    let producerDetails = await MyApiService.FetchAllProducers();
+                    this.producerOptions = [];
+                    $.each(producerDetails.data.result, (key, value) => {
+                        this.producerOptions.push({
                             name: value.name,
-                            id: parseInt(value.producer_id)
+                            id: value.id
                         });
                     });
                 } catch (e) {
-                    console.log(e);
-                    alert('Something went wrong!');
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
                 }
             },
-            async populateForm() {
+            async PopulateForm() {
                 try {
-                    if (this.modified_details.id !== -1) {
-                        this.showPreview = true;
-
-                        let response = await myApiService.listItems(4, this.modified_details.id);
-                        response = response.data.list[0];
-                        this.modified_details.name = response.name;
-                        this.modified_details.image = response.image;
-                        this.modified_details.plot = response.plot;
-                        this.modified_details.yor = response.yor;
+                    if (this.movieDetails.id !== -1) {
+                        let response = await MyApiService.FetchSpecificMovie(this.movieDetails.id);
+                        response = response.data.result;
+                        this.movieDetails.name = response.name;
+                        this.movieDetails.image = response.image;
+                        this.movieDetails.plot = response.plot;
+                        this.movieDetails.yearOfRelease = response.yearOfRelease;
 
                         // set selected actors and producer
-                        response.actor_names.forEach((value, index) => {
-                            this.selected_actors.push({
-                                id: parseInt(response.actor_ids[index]),
-                                name: value
+                        response.actors.forEach(value => {
+                            this.selectedActors.push({
+                                id: value.id,
+                                name: value.name
                             });
                         });
 
-                        this.selected_producer = {
-                            id: parseInt(response.producer_id),
-                            name: response.producer_name
+                        this.selectedProducer = {
+                            id: response.producer.id,
+                            name: response.producer.name
                         };
                     }
                 } catch (e) {
-                    console.error(e.stack);
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
                 }
             },
-            imageEventListener(e) {
-                let name_splits = e.target.value.split(".");
-                let extension = name_splits[name_splits.length - 1];
-                let allowed_extensions = ["jpg", "jpeg", "png", "gif"];
-                if (!allowed_extensions.includes(extension)) {
-                    // show_toast(0, "File type not allowed!", "");
-                    alert("File type not allowed!");
-                    event.target.value = "";
-                } else {
-                    if (e.target.files[0].size > 10000000) {
-                        // show_toast(0, "File size exceeded!", "File size limit is 2 MB.");
-                        alert("File size limit is 10 MB.");
-                        event.target.value = "";
+            async ImageEventListener(e) {
+                try {
+                    let imageDetails = e.target.value.split(".");
+                    let extension = imageDetails[imageDetails.length - 1];
+                    let allowedExtensions = ["jpg", "jpeg", "png", "gif"];
+                    if (!allowedExtensions.includes(extension)) {
+                        // show_toast(0, "File type not allowed!", "");
+                        alert("File type not allowed!");
+                        e.target.value = "";
                     } else {
-                        let formData = new FormData();
-                        formData.append('file', e.target.files[0]);
-                        myApiService.uploadImage(formData).then(res => {
-                            if (res.data.status === 1) {
-                                this.modified_details.image = res.data.filename;
-                                $('#filename').val(this.modified_details.image);
-                                this.file_status = 1;
-                            } else {
-                                alert('Error While Uploading!');
-                                this.file_status = 0;
-                            }
-                        });
-                        this.showPreview = true;
+                        if (e.target.files[0].size > 10000000) {
+                            // show_toast(0, "File size exceeded!", "File size limit is 2 MB.");
+                            alert("File size limit is 10 MB.");
+                            e.target.value = "";
+                        } else {
+                            let formData = new FormData();
+                            formData.append('file', e.target.files[0]);
+                            let res = await MyApiService.UploadImage(formData);
+                            this.movieDetails.image = res.data.result;
+                            this.showPreview = true;
+                        }
                     }
+                } catch (e) {
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
                 }
             },
-            submitForm() {
-                this.$v.modified_details.$touch();
-                if (this.$v.modified_details.$error || this.validateSelectedActors || this.validateSelectedProducer || !this.file_status)
-                    console.log('Fill all the fields!!');
-                else {
-                    let form_data = {
-                        movie_name: this.modified_details.name,
-                        filename: this.modified_details.image,
-                        plot: this.modified_details.plot,
-                        yor: this.modified_details.yor,
-                        actor_id_list: this.selected_actors_form.join(','),
-                        producer_id_list: this.selected_producer_form
+            async SubmitForm() {
+                try {
+                    let movieData = {
+                        name: this.movieDetails.name,
+                        image: this.movieDetails.image,
+                        plot: this.movieDetails.plot,
+                        yearOfRelease: this.movieDetails.yearOfRelease,
+                        actorIdList: this.selectedActorIds,
+                        producerId: this.selectedProducerId
                     };
-                    if (this.modified_details.id === -1) {
-                        myApiService.addMovie(form_data).then(res => {
-                            if (res.data.status === 1) {
-                                console.log('Added Successfully!');
-                                this.$router.push({name: 'movies'});
-                            } else {
-                                console.log('Something went wrong!');
-                            }
-                        });
+                    if (this.movieDetails.id === -1) {
+                        let res = await MyApiService.AddMovie(movieData);
+                        console.log(res.data.message);
+                        ShowToast(1, "Movie added successfully");
                     } else {
-                        form_data.movie_id = this.modified_details.id;
-                        myApiService.updateMovie(form_data).then(res => {
-                            if (res.data.status === 1) {
-                                console.log('Updated Successfully!');
-                                this.$router.push({name: 'movies'});
-                            } else {
-                                console.log('Something went wrong');
-                            }
-                        });
+                        movieData.id = this.movieDetails.id;
+                        let res = await MyApiService.UpdateMovie(movieData, movieData.id);
+                        console.log(res.data.message);
+                        ShowToast(1, "Movie updated successfully");
                     }
+                    await this.$router.push({name: 'movies'});
+                } catch (e) {
+                    console.error(e.toString());
+                    ShowToast(2, "Something went wrong");
                 }
             },
-            sendType(type) {
+            SendType(type) {
                 eventBus.$emit('typeCasted', type);
-            }
-        },
-        computed: {
-            validateSelectedActors() {
-                return this.selected_actors.length === 0;
-            },
-            validateSelectedProducer() {
-                return this.selected_producer === null;
             }
         },
         created() {
 
-            this.populateActors();
-            this.populateProducer();
-            if(this.$route.params.id) {
-                console.log('aaya!');
-                this.modified_details.id = this.$route.params.id;
-                this.file_status = 1;
-                this.populateForm();
+            this.PopulateActors();
+            this.PopulateProducer();
+            if (this.$route.params.id) {
+                this.movieDetails.id = this.$route.params.id;
+                this.showPreview = true;
+                this.PopulateForm();
             }
 
             eventBus.$on('newAddition', (value, type) => {
                 if (type === 1) {
-                    this.actor_options.push(value);
-                    this.selected_actors.push(value)
+                    this.actorOptions.push(value);
+                    this.selectedActors.push(value)
                 } else {
-                    this.producer_options.push(value);
-                    this.selected_producer = value;
+                    this.producerOptions.push(value);
+                    this.selectedProducer = value;
                 }
             });
         },
         watch: {
-            selected_actors(newVal, oldVal) {
-                this.selected_actors_form = [];
+            selectedActors(newVal, oldVal) {
+                this.selectedActorIds = [];
                 $.each(newVal, (key, value) => {
-                    this.selected_actors_form.push(parseInt(value.id));
+                    this.selectedActorIds.push(value.id);
                 });
             },
-            selected_producer(newVal, oldVal) {
-                this.selected_producer_form = newVal.id;
+            selectedProducer(newVal, oldVal) {
+                this.selectedProducerId = newVal.id;
             }
         }
     }
@@ -348,5 +333,13 @@
 
     .disabled {
         pointer-events: none;
+    }
+
+    .requiredField {
+        color: rgba(255, 38, 0, 0.78);
+    }
+
+    .imageLabel {
+        margin-bottom: 1.5rem;
     }
 </style>

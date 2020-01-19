@@ -1,52 +1,68 @@
 import axios from 'axios'
 
-export class myApiService {
-    static listItems(type, movie_id = -1) {
-        let params = {
-            type: type
-        };
-        if(movie_id !== -1) {
-            params.movie_id = movie_id;
-        }
+export class MyApiService {
+
+    static FetchAllMovies() {
         return axios({
-            url: '/list_items',
-            method: 'get',
-            params: params
-        })
+            url: '/api/movies',
+            method: 'get'
+        });
     }
 
-    static getItemDetails(type, id) {
+    static FetchSpecificMovie(movieId) {
         return axios({
-            url: '/get_actor_producer',
-            method: 'get',
-            params: {
-                fetch_type: type,
-                reqID: id
-            }
-        })
+            url: '/api/movies/' + movieId,
+            method: 'get'
+        });
     }
 
-    static addMovie(formData) {
+    static FetchAllActors() {
         return axios({
-            url: '/add_movie',
+            url: '/api/actors',
+            method: 'get'
+        });
+    }
+
+    static FetchSpecificActor(actorId) {
+        return axios({
+            url: '/api/actors/' + actorId,
+            method: 'get'
+        });
+    }
+
+    static FetchAllProducers() {
+        return axios({
+            url: '/api/producers',
+            method: 'get'
+        });
+    }
+
+    static FetchSpecificProducer(producerId) {
+        return axios({
+            url: '/api/producers/' + producerId,
+            method: 'get'
+        });
+    }
+
+    static AddMovie(movieData) {
+        return axios({
+            url: '/api/movies',
             method: 'post',
-            data: formData,
-            withCredentials: true
+            data: movieData
         })
     }
 
-    static updateMovie(formData) {
+    static UpdateMovie(movieData, id) {
         return axios({
-            url: '/update_movie',
-            method: 'post',
-            data: formData,
-            withCredentials: true
+            url: '/api/movies/' + id,
+            method: 'put',
+            data: movieData
         })
     }
 
-    static uploadImage(formData) {
+    static UploadImage(formData) {
         return axios({
-            url: '/upload',
+            url: '/api/files',
             method: 'post',
             data: formData,
             config: {
@@ -57,11 +73,22 @@ export class myApiService {
         })
     }
 
-    static addItem(formData) {
+    // Add actor/producer
+    static AddItem(details, type) {
+        let url = '/api/';
+        if (type === 1)
+            url += 'actors';
+        else
+            url += 'producers';
         return axios({
-            url: '/add_actor_producer',
+            url: url,
             method: 'post',
-            data: formData
+            data: details,
+            config: {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
         });
     }
 }
