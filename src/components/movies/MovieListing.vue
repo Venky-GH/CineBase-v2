@@ -1,27 +1,27 @@
 <template>
     <div>
         <div class="row thumbnail-container">
-            <div v-for="item in FilteredMovies" v-bind:key="item.id" class="col-sm-6 col-md-4" data-aos="zoom-in" data-aos-duration="1000">
+            <div v-for="movie in FilteredMovies" :key="movie.id" class="col-sm-6 col-md-4" data-aos="zoom-in" data-aos-duration="1000">
                 <div class="thumbnail">
-                    <img :src="baseImageURL + item.image" :alt="item.image">
+                    <img :src="baseImageURL + movie.image" :alt="movie.image">
                     <div class="caption">
                         <div>
                             <div class="section_headers">Starring:</div>
-                            <div class="chip actor" v-for="value in item.actors" v-bind:key="value.id">
-                                <span @click="ShowActorDetails(value.id)">{{ value.name }}</span>
+                            <div class="chip actor" v-for="actor in movie.actors" :key="actor.id">
+                                <span @click="ShowActorDetails(actor.id)">{{ actor.name }}</span>
                             </div>
                         </div>
                         <div>
                             <div class="section_headers">Produced by:</div>
-                            <p class="chip producer" @click="ShowProducerDetails(item.producer.id)">{{
-                                item.producer.name }}</p>
+                            <p class="chip producer" @click="ShowProducerDetails(movie.producer.id)">{{
+                                movie.producer.name }}</p>
                         </div>
                         <hr>
-                        <h3 class="movie_name">{{ item.name }} <span
-                                class="yearOfRelease">({{ item.yearOfRelease }})</span></h3>
-                        <p class="plot">{{ item.plot }}</p>
+                        <h3 class="movie_name">{{ movie.name }} <span
+                                class="yearOfRelease">({{ movie.yearOfRelease }})</span></h3>
+                        <p class="plot">{{ movie.plot }}</p>
                         <p class="button_section">
-                            <router-link :to="{name: 'editMovie', params: {id: item.id}}" tag="button"
+                            <router-link :to="{name: 'editMovie', params: {id: movie.id}}" tag="button"
                                          class="btn edit_button">Edit
                             </router-link>
                         </p>

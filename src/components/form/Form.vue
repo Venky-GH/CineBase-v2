@@ -182,13 +182,11 @@
                     let extension = imageDetails[imageDetails.length - 1];
                     let allowedExtensions = ["jpg", "jpeg", "png", "gif"];
                     if (!allowedExtensions.includes(extension)) {
-                        // show_toast(0, "File type not allowed!", "");
-                        alert("File type not allowed!");
+                        ShowToast(2, "File type not allowed!");
                         e.target.value = "";
                     } else {
                         if (e.target.files[0].size > 10000000) {
-                            // show_toast(0, "File size exceeded!", "File size limit is 2 MB.");
-                            alert("File size limit is 10 MB.");
+                            ShowToast(2, "File size limit is 10 MB.");
                             e.target.value = "";
                         } else {
                             let formData = new FormData();

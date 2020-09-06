@@ -90,7 +90,7 @@
                     };
                     eventBus.$emit('newAddition', insertedItem, this.type);
                     this.ResetForm();
-                    ShowToast(1, (this.type === 1) ? "Actor" : "Producer" + " added successfully");
+                    ShowToast(1, ((this.type === 1) ? "Actor" : "Producer") + " added successfully");
                 } catch (e) {
                     console.error(e.toString());
                     ShowToast(2, "Something went wrong");

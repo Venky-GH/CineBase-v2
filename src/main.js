@@ -39,7 +39,7 @@ export const ShowToast = (type, title, msg = '') => {
     if (type === 1)
         color = 'rgba(11,183,108,0.8)';
     else if (type === 2)
-        color = 'rgba(229,57,53,0.81)';
+        color = 'rgba(229,57,53,0.9)';
     else
         color = 'rgba(0,179,223,0.8)';
     iziToast.show({
@@ -51,6 +51,6 @@ export const ShowToast = (type, title, msg = '') => {
         title: title,
         message: msg,
         timeout: 2000,
-        balloon: true
+        balloon: false
     })
 };
