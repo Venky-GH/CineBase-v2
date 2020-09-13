@@ -1,0 +1,1 @@
+docker run --rm -ti -p 9191:8080 cinebase-vue
